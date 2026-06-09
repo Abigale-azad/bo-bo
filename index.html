@@ -25394,6 +25394,15 @@ onchange="handleFriendAvatarUpload(event)"><span id="friendAvatarPreview">+</spa
             <label class="form-label">messagingSenderId (可选)</label>
             <input type="text" class="form-input" id="syncSenderId" placeholder="xxxxxxxxxx">
         </div>
+        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e5e5;">
+            <div style="font-size: 13px; color: #333; font-weight: 500; margin-bottom: 6px;">设备ID (跨设备同步钥匙)</div>
+            <div style="font-size: 12px; color: #999; margin-bottom: 8px;">PC和手机必须使用相同的设备ID才能同步数据</div>
+            <div style="display: flex; gap: 6px; align-items: center;">
+                <input type="text" class="form-input" id="syncUserId" placeholder="自动生成" style="flex: 1; font-size: 12px;" readonly>
+                <button class="modal-btn" style="padding: 8px 12px; font-size: 12px; white-space: nowrap;" onclick="copyCloudUserId()">复制</button>
+                <button class="modal-btn" style="padding: 8px 12px; font-size: 12px; white-space: nowrap;" onclick="editCloudUserId()">修改</button>
+            </div>
+        </div>
         <div class="modal-buttons" style="margin-top: 20px;">
             <button class="modal-btn modal-btn-cancel" onclick="closeCloudSyncConfig()">取消</button>
             <button class="modal-btn modal-btn-confirm" onclick="saveCloudSyncConfig()">保存并启用</button>
@@ -41098,7 +41107,28 @@ function openCloudSyncConfig() {
             document.getElementById('syncSenderId').value = config.messagingSenderId || '';
         }
     } catch (e) {}
+    // 回填设备ID
+    const uidInput = document.getElementById('syncUserId');
+    if (uidInput && window.CloudSync) {
+        uidInput.value = CloudSync.userId || '';
+    }
     modal.style.display = 'flex';
+}
+
+function copyCloudUserId() {
+    const input = document.getElementById('syncUserId');
+    if (!input || !input.value) return;
+    input.select();
+    document.execCommand('copy');
+    showToast('已复制设备ID');
+}
+
+function editCloudUserId() {
+    const input = document.getElementById('syncUserId');
+    if (!input) return;
+    input.removeAttribute('readonly');
+    input.focus();
+    input.placeholder = '粘贴PC端的设备ID（如 u_mq67zbu6_n3uc0l）';
 }
 
 function closeCloudSyncConfig() {
@@ -41119,6 +41149,13 @@ async function saveCloudSyncConfig() {
 
     const config = { apiKey, projectId, appId, messagingSenderId };
     localStorage.setItem('jrsy_firebase_config', JSON.stringify(config));
+
+    // 保存设备ID覆盖
+    const uidInput = document.getElementById('syncUserId');
+    if (uidInput && uidInput.value.trim() && uidInput.value !== (window.CloudSync ? CloudSync.userId : '')) {
+        window.CloudSync && CloudSync.setUserId(uidInput.value.trim());
+    }
+
     closeCloudSyncConfig();
 
     showToast('正在连接云端...');
