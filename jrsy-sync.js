@@ -90,12 +90,16 @@ const CloudSync = {
     },
 
     _resolveUserId() {
-        // 优先使用手动覆盖的设备ID（跨设备同步的钥匙）
+        // 最高优先级：同步码（跨设备统一，用户手动设置）
+        const syncCode = localStorage.getItem('jrsy_sync_code');
+        if (syncCode && syncCode.length >= 1) return 'u_' + this._simpleHash(syncCode);
+        // 其次：手动覆盖的设备ID
         const override = localStorage.getItem('jrsy_cloud_uid_override');
         if (override && override.length >= 5) return override;
-        // 基于激活码生成，同一激活码 = 同一设备ID
+        // 其次：基于激活码生成
         const code = localStorage.getItem('jrsy_activation_record');
         if (code) return 'u_' + this._simpleHash(code);
+        // 最后：随机生成（单设备用）
         let uid = localStorage.getItem('jrsy_cloud_uid');
         if (uid) return uid;
         uid = 'u_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 6);
@@ -103,19 +107,24 @@ const CloudSync = {
         return uid;
     },
 
-    /** 设置设备ID覆盖（用于跨设备同步时统一同一账号） */
-    setUserId(newId) {
-        if (!newId || newId.length < 5) return;
-        localStorage.setItem('jrsy_cloud_uid_override', newId.trim());
-        this.userId = this._resolveUserId();
-        console.log('[CloudSync] 设备ID已更新: ' + this.userId);
-    },
-
-    /** 清除设备ID覆盖，回到默认 */
-    clearUserIdOverride() {
+    /** 设置同步码（跨设备统一，所有设备输同一个同步码即可同步同一份数据） */
+    setSyncCode(code) {
+        if (!code || code.length < 1) {
+            localStorage.removeItem('jrsy_sync_code');
+            this.userId = this._resolveUserId();
+            console.log('[CloudSync] 同步码已清除，userId=' + this.userId);
+            return;
+        }
+        localStorage.setItem('jrsy_sync_code', code.trim());
+        // 清除旧的覆盖，避免冲突
         localStorage.removeItem('jrsy_cloud_uid_override');
         this.userId = this._resolveUserId();
-        console.log('[CloudSync] 设备ID已重置: ' + this.userId);
+        console.log('[CloudSync] 同步码已设置，userId=' + this.userId);
+    },
+
+    /** 获取当前同步码 */
+    getSyncCode() {
+        return localStorage.getItem('jrsy_sync_code') || '';
     },
 
     _simpleHash(str) {

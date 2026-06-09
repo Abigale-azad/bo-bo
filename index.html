@@ -25395,8 +25395,12 @@ onchange="handleFriendAvatarUpload(event)"><span id="friendAvatarPreview">+</spa
             <input type="text" class="form-input" id="syncSenderId" placeholder="xxxxxxxxxx">
         </div>
         <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e5e5;">
-            <div style="font-size: 13px; color: #333; font-weight: 500; margin-bottom: 6px;">设备ID (跨设备同步钥匙)</div>
-            <div style="font-size: 12px; color: #999; margin-bottom: 8px;">PC和手机必须使用相同的设备ID才能同步数据</div>
+            <div style="font-size: 13px; color: #333; font-weight: 500; margin-bottom: 6px;">🔑 同步码 <span style="font-size: 11px; color: #007aff;">（跨设备必填）</span></div>
+            <div style="font-size: 12px; color: #999; margin-bottom: 8px;">PC 和手机输同一个同步码，就能看到同一份云端数据。随便设，比如：<code style="background:#f5f5f5;padding:1px 4px;border-radius:3px;">myjrsy</code></div>
+            <input type="text" class="form-input" id="syncCode" placeholder="输入同步码（所有设备相同）" style="font-size: 13px;" oninput="document.getElementById('syncUserId').value=this.value ? 'u_' + hashCode36(this.value) : '自动生成'">
+        </div>
+        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #eee;">
+            <div style="font-size: 12px; color: #999; margin-bottom: 6px;">高级：手动指定设备ID（一般不用改）</div>
             <div style="display: flex; gap: 6px; align-items: center;">
                 <input type="text" class="form-input" id="syncUserId" placeholder="自动生成" style="flex: 1; font-size: 12px;" readonly>
                 <button class="modal-btn" style="padding: 8px 12px; font-size: 12px; white-space: nowrap;" onclick="copyCloudUserId()">复制</button>
@@ -32580,6 +32584,13 @@ function closeHeartsVoiceModalOnClickOutside(event) {
     if (event.target === event.currentTarget) {
         closeHeartsVoiceModal();
     }
+}
+
+// 同步码 → 设备ID 的 hash 函数（与 CloudSync._simpleHash 一致）
+function hashCode36(str) {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+    return 'u_' + Math.abs(h).toString(36);
 }
 
         function showToast(message, duration = 3000) {
@@ -41107,6 +41118,11 @@ function openCloudSyncConfig() {
             document.getElementById('syncSenderId').value = config.messagingSenderId || '';
         }
     } catch (e) {}
+    // 回填同步码
+    const syncCodeInput = document.getElementById('syncCode');
+    if (syncCodeInput && window.CloudSync) {
+        syncCodeInput.value = CloudSync.getSyncCode() || '';
+    }
     // 回填设备ID
     const uidInput = document.getElementById('syncUserId');
     if (uidInput && window.CloudSync) {
@@ -41150,7 +41166,17 @@ async function saveCloudSyncConfig() {
     const config = { apiKey, projectId, appId, messagingSenderId };
     localStorage.setItem('jrsy_firebase_config', JSON.stringify(config));
 
-    // 保存设备ID覆盖
+    // 保存同步码（跨设备统一的关键）
+    const syncCodeInput = document.getElementById('syncCode');
+    if (syncCodeInput) {
+        const code = syncCodeInput.value.trim();
+        if (code) {
+            localStorage.setItem('jrsy_sync_code', code);
+        } else {
+            localStorage.removeItem('jrsy_sync_code');
+        }
+    }
+    // 同时保存设备ID覆盖（高级用）
     const uidInput = document.getElementById('syncUserId');
     if (uidInput && uidInput.value.trim() && uidInput.value !== (window.CloudSync ? CloudSync.userId : '')) {
         window.CloudSync && CloudSync.setUserId(uidInput.value.trim());
