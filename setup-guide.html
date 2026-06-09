@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jrsy 云端同步 - 配置指南</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            line-height: 1.7;
+            padding: 20px;
+        }
+        .container { max-width: 700px; margin: 0 auto; background: #fff; border-radius: 16px; padding: 40px; box-shadow: 0 2px 20px rgba(0,0,0,0.06); }
+        h1 { font-size: 28px; margin-bottom: 8px; }
+        h2 { font-size: 20px; margin: 32px 0 12px; padding-bottom: 8px; border-bottom: 2px solid #007aff; }
+        h3 { font-size: 16px; margin: 20px 0 8px; color: #007aff; }
+        p { margin: 8px 0; }
+        .step { background: #f8f9fa; border-radius: 10px; padding: 20px; margin: 16px 0; border-left: 4px solid #007aff; }
+        .step-num { display: inline-block; background: #007aff; color: #fff; width: 26px; height: 26px; border-radius: 50%; text-align: center; line-height: 26px; font-size: 14px; font-weight: bold; margin-right: 8px; }
+        code {
+            background: #eee; padding: 2px 6px;
+            border-radius: 4px; font-size: 13px;
+            word-break: break-all;
+        }
+        pre {
+            background: #1d1d1f; color: #98c379;
+            padding: 16px; border-radius: 8px;
+            overflow-x: auto; font-size: 13px;
+            margin: 12px 0;
+        }
+        .tip {
+            background: #e8f5e9; border-left: 4px solid #34c759;
+            padding: 12px 16px; border-radius: 8px; margin: 12px 0;
+        }
+        .warn {
+            background: #fff3cd; border-left: 4px solid #ff9500;
+            padding: 12px 16px; border-radius: 8px; margin: 12px 0;
+        }
+        button {
+            background: #007aff; color: #fff; border: none;
+            padding: 12px 24px; border-radius: 8px;
+            font-size: 15px; cursor: pointer; margin: 4px;
+        }
+        button:hover { background: #0056cc; }
+        input {
+            padding: 8px 12px; border: 1px solid #ddd;
+            border-radius: 6px; font-size: 14px; width: 100%;
+        }
+        .form-group { margin: 12px 0; }
+        .form-group label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 13px; color: #666; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>jrsy 云端同步</h1>
+    <p style="color:#666;">让你的聊天记录永不丢失，换设备、清缓存都能自动恢复。</p>
+
+    <hr style="margin: 24px 0; border-color: #eee;">
+
+    <h2>快速开始</h2>
+    <p>只需要 3 步，大约 5 分钟。</p>
+
+    <div class="step">
+        <h3><span class="step-num">1</span> 创建 Firebase 项目</h3>
+        <p>访问 <a href="https://console.firebase.google.com/" target="_blank">Firebase 控制台</a></p>
+        <ol>
+            <li>点击 <strong>"添加项目"</strong>（或 "Create a project"）</li>
+            <li>输入项目名称（如 "jrsy-sync"），点击继续</li>
+            <li>关闭 Google Analytics（不需要），点击"创建项目"</li>
+            <li>等待项目创建完成，点击"继续"</li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h3><span class="step-num">2</span> 获取配置信息</h3>
+        <ol>
+            <li>在项目概览页，点击 <strong>"Web"（&lt;/&gt;）图标</strong> 添加 Web 应用</li>
+            <li>输入应用名称（如 "jrsy"），点击"注册应用"</li>
+            <li>复制弹出的 <strong>firebaseConfig</strong> 内容（类似下面这样）：
+                <pre>{
+  apiKey: "AIzaSyDxxxxxxxxxxxxxxxxxxxxxx",
+  authDomain: "jrsy-sync.firebaseapp.com",
+  projectId: "jrsy-sync",
+  storageBucket: "jrsy-sync.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:abc123def456"
+}</pre>
+            </li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h3><span class="step-num">3</span> 启用 Firestore 数据库</h3>
+        <ol>
+            <li>在左侧菜单点击 <strong>"Firestore Database"</strong></li>
+            <li>点击 <strong>"创建数据库"</strong></li>
+            <li>选择 <strong>"以测试模式启动"</strong>（开发阶段推荐）</li>
+            <li>选择数据库位置（默认即可），点击"启用"</li>
+        </ol>
+        <div class="warn">
+            注意：测试模式允许任何人读取你的数据，正式使用前请务必修改安全规则。
+        </div>
+    </div>
+
+    <div class="step">
+        <h3><span class="step-num">4</span> 在 jrsy 中配置</h3>
+        <ol>
+            <li>打开 jrsy 应用，进入 <strong>"我" → 设置 → 云同步</strong></li>
+            <li>点击 <strong>"配置云同步"</strong></li>
+            <li>填入从 Firebase 复制的 <code>apiKey</code> 和 <code>projectId</code></li>
+            <li>点击 <strong>"保存并启用"</strong></li>
+        </ol>
+        <div class="tip">
+            配置成功后，右上角会显示绿色"已同步"提示。每次数据变动都会自动保存到云端。
+        </div>
+    </div>
+
+    <h2>部署你的网页</h2>
+
+    <div class="step">
+        <h3>部署到 GitHub Pages（推荐）</h3>
+        <ol>
+            <li>在 GitHub 上创建一个新的公开仓库（如 <code>jrsy-cloud</code>）</li>
+            <li>将 <code>dist/</code> 文件夹里的所有文件上传到仓库</li>
+            <li>进入仓库 Settings → Pages</li>
+            <li>Source 选择 <strong>"Deploy from a branch"</strong>，分支选 <strong>main</strong></li>
+            <li>点击 Save，等待几分钟，访问 <code>https://你的用户名.github.io/jrsy-cloud/</code></li>
+        </ol>
+    </div>
+
+    <h2>Q&A</h2>
+
+    <p><strong>Q: 免费够用吗？</strong><br>
+    Firebase 免费额度：存储 1GB，每天 5 万次读取 / 2 万次写入。个人使用完全够用。</p>
+
+    <p><strong>Q: 数据安全吗？</strong><br>
+    你的数据存储在你自己的 Firebase 项目中，只有你能访问。<br>
+    测试模式 30 天后会失效，请在 Firebase 控制台 → Firestore → 规则 中设置安全规则：<br>
+    <code>allow read, write: if true;</code>（保持个人使用开放即可）</p>
+
+    <p><strong>Q: 怎么从旧设备迁移数据？</strong><br>
+    在旧设备上配置好云同步后，数据会自动上传。在新设备上用同样的激活码登录，数据会自动恢复。</p>
+
+    <p><strong>Q: 数据同步频率？</strong><br>
+    每次数据保存后 3 秒自动上传（防抖合并），避免频繁请求。</p>
+
+    <p style="margin-top: 32px; color: #999; font-size: 13px; text-align: center;">
+        jrsy CloudSync v1.0 — 基于 Firebase Firestore
+    </p>
+</div>
+</body>
+</html>
