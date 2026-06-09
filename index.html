@@ -24185,6 +24185,10 @@ filter: drop-shadow(0 4px 6px rgba(0,0,0,0.25));
                 <label class="form-label">手动同步</label>
                 <div class="form-value-display"><i class="ri-refresh-line"></i></div>
             </div>
+            <div class="form-group-row clickable" onclick="downloadFromCloud()" id="cloudSyncDownloadBtn" style="display:none;">
+                <label class="form-label" style="color: #34c759;">从云端恢复数据</label>
+                <div class="form-value-display"><i class="ri-download-2-line"></i></div>
+            </div>
             <div class="form-group-row clickable" onclick="document.getElementById('cloudSyncFileInput').click()" id="cloudSyncUploadBtn" style="display:none;">
                 <label class="form-label" style="color: #007aff;">上传备份文件 (.json.gz)</label>
                 <div class="form-value-display"><i class="ri-upload-2-line"></i></div>
@@ -41138,6 +41142,7 @@ async function saveCloudSyncConfig() {
 function updateCloudSyncUI() {
     const statusText = document.getElementById('cloudSyncStatusText');
     const forceBtn = document.getElementById('cloudSyncForceBtn');
+    const downloadBtn = document.getElementById('cloudSyncDownloadBtn');
     const clearBtn = document.getElementById('cloudSyncClearBtn');
     const uploadBtn = document.getElementById('cloudSyncUploadBtn');
 
@@ -41158,8 +41163,26 @@ function updateCloudSyncUI() {
         }
     }
     if (forceBtn) forceBtn.style.display = isInitialized ? '' : 'none';
+    if (downloadBtn) downloadBtn.style.display = isInitialized ? '' : 'none';
     if (clearBtn) clearBtn.style.display = isInitialized ? '' : 'none';
     if (uploadBtn) uploadBtn.style.display = isInitialized ? '' : 'none';
+}
+
+async function downloadFromCloud() {
+    if (!window.CloudSync || !CloudSync.enabled) {
+        showToast('\u4e91\u540c\u6b65\u672a\u542f\u7528');
+        return;
+    }
+    if (CloudSync.isDownloading) {
+        showToast('\u4e0b\u8f7d\u8fdb\u884c\u4e2d\uff0c\u8bf7\u7a0d\u5019');
+        return;
+    }
+    showToast('\u6b63\u5728\u4ece\u4e91\u7aef\u4e0b\u8f7d\u6570\u636e...');
+    try {
+        await CloudSync._doDownload();
+    } catch (e) {
+        showToast('\u4e0b\u8f7d\u5931\u8d25: ' + e.message);
+    }
 }
 
 async function uploadCloudBackup(file) {
